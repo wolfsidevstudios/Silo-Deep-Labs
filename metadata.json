@@ -1,0 +1,5 @@
+{
+  "name": "Silo Labs Deep Research",
+  "description": "An AI-powered application that performs deep research on a given topic, providing summaries, sources, flashcards, and more in an interactive, split-screen interface.",
+  "requestFramePermissions": []
+}
