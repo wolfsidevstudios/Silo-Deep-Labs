@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import type { ResearchData, FlashCard, MiniAppData, CanvasData, CodeFile, AgentData, AgentStep, DebateData, Viewpoint, StudyData, KeyConcept, StudyPlanItem, PracticeProblem, Analogy, StudioData, VideoIdea, ScriptSegment, TripData, ItineraryItem, BudgetItem, HealthData, WorkoutDay, MealDay, InterviewData, InterviewQuestion, MarketData, TargetAudience, Competitor, Swot, ChefData, GameData, Ingredient, GameMechanic, CharacterConcept } from '../types';
+import type { ResearchData, FlashCard, MiniAppData, CanvasData, CodeFile, AgentData, AgentStep, DebateData, Viewpoint, StudyData, KeyConcept, StudyPlanItem, PracticeProblem, Analogy, StudioData, VideoIdea, ScriptSegment, TripData, ItineraryItem, BudgetItem, HealthData, WorkoutDay, MealDay, InterviewData, InterviewQuestion, MarketData, TargetAudience, Competitor, Swot, ChefData, GameData, Ingredient, GameMechanic, CharacterConcept, CodeData, LegalData, FinanceData, CodeSnippet, LegalTerm, FinanceMetric, AnyData } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 // Type guards to differentiate between data types
@@ -14,6 +14,10 @@ function isInterviewData(data: any): data is InterviewData { return (data as Int
 function isMarketData(data: any): data is MarketData { return (data as MarketData).productIdea !== undefined; }
 function isChefData(data: any): data is ChefData { return (data as ChefData).recipeName !== undefined; }
 function isGameData(data: any): data is GameData { return (data as GameData).coreMechanics !== undefined; }
+function isCodeData(data: any): data is CodeData { return (data as CodeData).codeSnippets !== undefined; }
+function isLegalData(data: any): data is LegalData { return (data as LegalData).plainSummary !== undefined; }
+function isFinanceData(data: any): data is FinanceData { return (data as FinanceData).keyMetrics !== undefined; }
+
 
 type ResearchTab = 'Summary' | 'Sources' | 'Flash Cards' | 'Related Videos' | 'Interactive Mini App';
 type CanvasTab = 'Preview' | 'Sources' | 'Code';
@@ -27,6 +31,9 @@ type InterviewTab = 'Overview' | 'Common Qs' | 'Behavioral Qs' | 'Technical Qs' 
 type MarketTab = 'Summary' | 'Target Audience' | 'Competitors' | 'SWOT' | 'Marketing' | 'Sources';
 type ChefTab = 'Recipe' | 'Sources';
 type GameTab = 'Concept' | 'Mechanics' | 'Characters' | 'Monetization' | 'Sources';
+type CodeTab = 'Explanation' | 'Code' | 'Edge Cases' | 'Sources';
+type LegalTab = 'Disclaimer' | 'Summary' | 'Key Terms' | 'Main Points' | 'Sources';
+type FinanceTab = 'Disclaimer' | 'Summary' | 'Key Metrics' | 'Pros & Cons' | 'Sources';
 
 const researchTabs: ResearchTab[] = ['Summary', 'Sources', 'Flash Cards', 'Related Videos', 'Interactive Mini App'];
 const canvasTabs: CanvasTab[] = ['Preview', 'Sources', 'Code'];
@@ -40,9 +47,12 @@ const interviewTabs: InterviewTab[] = ['Overview', 'Common Qs', 'Behavioral Qs',
 const marketTabs: MarketTab[] = ['Summary', 'Target Audience', 'Competitors', 'SWOT', 'Marketing', 'Sources'];
 const chefTabs: ChefTab[] = ['Recipe', 'Sources'];
 const gameTabs: GameTab[] = ['Concept', 'Mechanics', 'Characters', 'Monetization', 'Sources'];
+const codeTabs: CodeTab[] = ['Explanation', 'Code', 'Edge Cases', 'Sources'];
+const legalTabs: LegalTab[] = ['Disclaimer', 'Summary', 'Key Terms', 'Main Points', 'Sources'];
+const financeTabs: FinanceTab[] = ['Disclaimer', 'Summary', 'Key Metrics', 'Pros & Cons', 'Sources'];
 
 interface LeftPaneProps {
-  data: ResearchData | CanvasData | AgentData | DebateData | StudyData | StudioData | TripData | HealthData | InterviewData | MarketData | ChefData | GameData;
+  data: AnyData;
   query: string;
 }
 
@@ -59,6 +69,9 @@ const LeftPane: React.FC<LeftPaneProps> = ({ data, query }) => {
     if (isMarketData(data)) return 'market';
     if (isChefData(data)) return 'chef';
     if (isGameData(data)) return 'game';
+    if (isCodeData(data)) return 'code';
+    if (isLegalData(data)) return 'legal';
+    if (isFinanceData(data)) return 'finance';
     return 'research';
   }, [data]);
 
@@ -75,6 +88,9 @@ const LeftPane: React.FC<LeftPaneProps> = ({ data, query }) => {
         case 'market': return marketTabs;
         case 'chef': return chefTabs;
         case 'game': return gameTabs;
+        case 'code': return codeTabs;
+        case 'legal': return legalTabs;
+        case 'finance': return financeTabs;
         default: return researchTabs;
     }
   }, [mode]);
@@ -203,6 +219,32 @@ const TabContent: React.FC<{ activeTab: any; data: any }> = ({ activeTab, data }
             case 'Sources': return <SourcesContent sources={data.sources} />;
             default: return null;
         }
+    } else if (isCodeData(data)) {
+        switch (activeTab as CodeTab) {
+            case 'Explanation': return <CodeExplanationContent explanation={data.solutionExplanation} />;
+            case 'Code': return <CodeSnippetsContent snippets={data.codeSnippets} />;
+            case 'Edge Cases': return <EdgeCasesContent cases={data.edgeCases} />;
+            case 'Sources': return <SourcesContent sources={data.sources} />;
+            default: return null;
+        }
+    } else if (isLegalData(data)) {
+        switch (activeTab as LegalTab) {
+            case 'Disclaimer': return <DisclaimerContent disclaimer={data.disclaimer} />;
+            case 'Summary': return <SummaryContent summary={data.plainSummary} />;
+            case 'Key Terms': return <KeyTermsContent terms={data.keyTerms} />;
+            case 'Main Points': return <MainPointsContent points={data.mainPoints} />;
+            case 'Sources': return <SourcesContent sources={data.sources} />;
+            default: return null;
+        }
+    } else if (isFinanceData(data)) {
+        switch (activeTab as FinanceTab) {
+            case 'Disclaimer': return <DisclaimerContent disclaimer={data.disclaimer} />;
+            case 'Summary': return <SummaryContent summary={data.summary} />;
+            case 'Key Metrics': return <KeyMetricsContent metrics={data.keyMetrics} />;
+            case 'Pros & Cons': return <ProsAndConsContent pros={data.prosAndCons.pros} cons={data.prosAndCons.cons} />;
+            case 'Sources': return <SourcesContent sources={data.sources} />;
+            default: return null;
+        }
     } else {
         switch (activeTab as ResearchTab) {
             case 'Summary': return <SummaryContent summary={data.summary} />;
@@ -214,6 +256,110 @@ const TabContent: React.FC<{ activeTab: any; data: any }> = ({ activeTab, data }
         }
     }
 };
+
+// --- Deep Finance Components ---
+const KeyMetricsContent: React.FC<{ metrics: FinanceMetric[] }> = ({ metrics }) => (
+    <div className="space-y-6">
+        {metrics.map((item, index) => (
+            <div key={index} className="bg-gray-50 rounded-lg p-5 border border-gray-200">
+                <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-bold text-gray-800">{item.metric}</h3>
+                    <span className="text-lg font-mono font-semibold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-md">{item.value}</span>
+                </div>
+                <p className="mt-2 text-gray-700">{item.explanation}</p>
+            </div>
+        ))}
+    </div>
+);
+
+const ProsAndConsContent: React.FC<{ pros: string[]; cons: string[] }> = ({ pros, cons }) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h4 className="font-bold text-lg text-green-800">Pros</h4>
+            <ul className="list-disc list-inside mt-2 text-gray-700 space-y-1">
+                {pros.map((p, i) => <li key={i}>{p}</li>)}
+            </ul>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <h4 className="font-bold text-lg text-red-800">Cons</h4>
+            <ul className="list-disc list-inside mt-2 text-gray-700 space-y-1">
+                {cons.map((c, i) => <li key={i}>{c}</li>)}
+            </ul>
+        </div>
+    </div>
+);
+
+// --- Deep Legal Components ---
+const KeyTermsContent: React.FC<{ terms: LegalTerm[] }> = ({ terms }) => (
+    <div className="space-y-4">
+        {terms.map((item, index) => (
+            <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <h3 className="text-lg font-bold text-gray-800">{item.term}</h3>
+                <p className="mt-1 text-gray-700">{item.definition}</p>
+            </div>
+        ))}
+    </div>
+);
+
+const MainPointsContent: React.FC<{ points: string[] }> = ({ points }) => (
+    <div>
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Main Points</h3>
+        <ul className="space-y-3">
+            {points.map((point, index) => (
+                <li key={index} className="flex items-start gap-3 p-3 bg-blue-50 rounded-md border border-blue-200">
+                    <svg className="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span className="text-gray-700">{point}</span>
+                </li>
+            ))}
+        </ul>
+    </div>
+);
+
+// --- Deep Code Components ---
+const CodeExplanationContent: React.FC<{ explanation: string }> = ({ explanation }) => (
+    <div className="prose prose-blue max-w-none text-gray-700">
+        {explanation.split('\n').map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+    </div>
+);
+
+const CodeSnippetsContent: React.FC<{ snippets: CodeSnippet[] }> = ({ snippets }) => {
+    const [selectedLang, setSelectedLang] = useState(snippets[0]?.language || '');
+
+    return (
+        <div className="flex flex-col">
+            <div className="flex-shrink-0 border-b border-gray-200 mb-2">
+                {snippets.map(snippet => (
+                    <button
+                        key={snippet.language}
+                        onClick={() => setSelectedLang(snippet.language)}
+                        className={`px-3 py-2 text-sm font-medium ${selectedLang === snippet.language ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        {snippet.language}
+                    </button>
+                ))}
+            </div>
+            {snippets.map(snippet => (
+                 <div key={snippet.language} className={`${selectedLang === snippet.language ? 'block' : 'hidden'}`}>
+                    <div className="bg-gray-800 text-white font-mono text-sm rounded-md p-4 overflow-auto">
+                        <pre><code>{snippet.code}</code></pre>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+const EdgeCasesContent: React.FC<{ cases: string[] }> = ({ cases }) => (
+    <div>
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Edge Cases & Considerations</h3>
+        <ul className="list-disc list-inside space-y-2 text-gray-700">
+            {cases.map((c, index) => (
+                <li key={index}>{c}</li>
+            ))}
+        </ul>
+    </div>
+);
+
 
 // --- Deep Game Components ---
 const GameConceptContent: React.FC<{ title: string; concept: string }> = ({ title, concept }) => (

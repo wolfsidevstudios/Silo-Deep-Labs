@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Chat } from "@google/genai";
-import type { ResearchData, CanvasData, AgentData, DebateData, StudyData, StudioData, TripData, HealthData, InterviewData, MarketData, ChefData, GameData, ChatMessage, GroundingChunk } from '../types';
+import type { ResearchData, CanvasData, AgentData, DebateData, StudyData, StudioData, TripData, HealthData, InterviewData, MarketData, ChefData, GameData, ChatMessage, GroundingChunk, CodeData, LegalData, FinanceData } from '../types';
 
 const researchSchema = {
   type: Type.OBJECT,
@@ -672,14 +672,137 @@ const gameSchema = {
     required: ["title", "concept", "coreMechanics", "characterConcepts", "monetization", "sources"]
 };
 
+const codeSchema = {
+    type: Type.OBJECT,
+    properties: {
+        problemStatement: { type: Type.STRING, description: "A clear restatement of the coding problem to be solved." },
+        solutionExplanation: { type: Type.STRING, description: "A detailed, step-by-step explanation of the logic behind the solution, including the choice of algorithms and data structures." },
+        codeSnippets: {
+            type: Type.ARRAY,
+            description: "An array of code snippets demonstrating the solution. Provide snippets in multiple relevant languages if applicable (e.g., Python, JavaScript).",
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    language: { type: Type.STRING, description: "The programming language of the code snippet." },
+                    code: { type: Type.STRING, description: "The complete, runnable code snippet." }
+                },
+                required: ["language", "code"]
+            }
+        },
+        edgeCases: {
+            type: Type.ARRAY,
+            description: "A list of potential edge cases or corner cases to consider for this problem.",
+            items: { type: Type.STRING }
+        },
+        sources: {
+            type: Type.ARRAY,
+            description: "A list of sources for algorithms, data structures, or documentation.",
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    title: { type: Type.STRING, description: "Title of the source." },
+                    url: { type: Type.STRING, description: "URL of the source." },
+                    snippet: { type: Type.STRING, description: "A relevant snippet." }
+                },
+                required: ["title", "url", "snippet"]
+            }
+        }
+    },
+    required: ["problemStatement", "solutionExplanation", "codeSnippets", "edgeCases", "sources"]
+};
+
+const legalSchema = {
+    type: Type.OBJECT,
+    properties: {
+        topic: { type: Type.STRING, description: "The legal topic being analyzed." },
+        disclaimer: { type: Type.STRING, description: "A mandatory, clear disclaimer stating that this is not legal advice and is for informational purposes only. It must strongly recommend consulting a qualified legal professional." },
+        plainSummary: { type: Type.STRING, description: "A summary of the legal topic written in simple, plain English, avoiding jargon as much as possible." },
+        keyTerms: {
+            type: Type.ARRAY,
+            description: "A list of key legal terms relevant to the topic, with clear definitions.",
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    term: { type: Type.STRING, description: "The legal term." },
+                    definition: { type: Type.STRING, description: "The definition of the term in plain English." }
+                },
+                required: ["term", "definition"]
+            }
+        },
+        mainPoints: {
+            type: Type.ARRAY,
+            description: "A list of the most important points, consequences, or articles related to the legal topic.",
+            items: { type: Type.STRING }
+        },
+        sources: {
+            type: Type.ARRAY,
+            description: "A list of credible sources, such as government websites, statutes, or reputable legal commentary.",
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    title: { type: Type.STRING, description: "Title of the source." },
+                    url: { type: Type.STRING, description: "URL of the source." },
+                    snippet: { type: Type.STRING, description: "A relevant snippet." }
+                },
+                required: ["title", "url", "snippet"]
+            }
+        }
+    },
+    required: ["topic", "disclaimer", "plainSummary", "keyTerms", "mainPoints", "sources"]
+};
+
+const financeSchema = {
+    type: Type.OBJECT,
+    properties: {
+        topic: { type: Type.STRING, description: "The financial topic being analyzed." },
+        disclaimer: { type: Type.STRING, description: "A mandatory, clear disclaimer stating that this is not financial advice and is for informational purposes only. It must strongly recommend consulting a qualified financial advisor." },
+        summary: { type: Type.STRING, description: "A detailed summary of the financial topic, explaining what it is and its relevance." },
+        keyMetrics: {
+            type: Type.ARRAY,
+            description: "A list of key metrics or factors to consider for this topic.",
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    metric: { type: Type.STRING, description: "The name of the metric (e.g., 'P/E Ratio', 'Interest Rate')." },
+                    value: { type: Type.STRING, description: "A typical value, range, or state of the metric." },
+                    explanation: { type: Type.STRING, description: "An explanation of what this metric means and why it's important." }
+                },
+                required: ["metric", "value", "explanation"]
+            }
+        },
+        prosAndCons: {
+            type: Type.OBJECT,
+            description: "A balanced view of the advantages and disadvantages related to the topic.",
+            properties: {
+                pros: { type: Type.ARRAY, items: { type: Type.STRING }, description: "A list of potential advantages or 'pros'." },
+                cons: { type: Type.ARRAY, items: { type: Type.STRING }, description: "A list of potential disadvantages or 'cons'." }
+            },
+            required: ["pros", "cons"]
+        },
+        sources: {
+            type: Type.ARRAY,
+            description: "A list of credible financial news sites, academic papers, or official sources.",
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    title: { type: Type.STRING, description: "Title of the source." },
+                    url: { type: Type.STRING, description: "URL of the source." },
+                    snippet: { type: Type.STRING, description: "A relevant snippet." }
+                },
+                required: ["title", "url", "snippet"]
+            }
+        }
+    },
+    required: ["topic", "disclaimer", "summary", "keyMetrics", "prosAndCons", "sources"]
+};
+
+
 export class GeminiService {
   private ai: GoogleGenAI;
 
-  constructor(apiKey: string) {
-    if (!apiKey) {
-      throw new Error("API key is required to initialize GeminiService.");
-    }
-    this.ai = new GoogleGenAI({ apiKey });
+  // FIX: Constructor updated to use process.env.API_KEY directly, removing the apiKey parameter.
+  constructor() {
+    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   }
 
   async performDeepResearch(query: string): Promise<ResearchData> {
@@ -1012,6 +1135,84 @@ export class GeminiService {
       } catch (error) {
           console.error("Error in performDeepGame:", error);
           throw new Error("Failed to fetch or parse game data from the Gemini API.");
+      }
+  }
+
+  async performDeepCode(query: string): Promise<CodeData> {
+      console.log(`Performing deep code for: ${query}`);
+      try {
+          const response = await this.ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: `Act as an expert software engineer and computer science tutor. Your goal is to provide a comprehensive solution to the following coding problem or concept: "${query}". Restate the problem, provide a detailed explanation of the solution, include runnable code snippets in relevant languages, list potential edge cases, and cite sources. Return the entire solution in the specified JSON format.`,
+              config: {
+                  responseMimeType: "application/json",
+                  responseSchema: codeSchema,
+              },
+          });
+
+          const jsonText = response.text.trim();
+          const parsedData = JSON.parse(jsonText);
+
+          if (!parsedData.problemStatement || !parsedData.solutionExplanation || !parsedData.codeSnippets) {
+              throw new Error("Received incomplete code data from the API.");
+          }
+
+          return parsedData as CodeData;
+      } catch (error) {
+          console.error("Error in performDeepCode:", error);
+          throw new Error("Failed to fetch or parse code data from the Gemini API.");
+      }
+  }
+
+  async performDeepLegal(query: string): Promise<LegalData> {
+      console.log(`Performing deep legal for: ${query}`);
+      try {
+          const response = await this.ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: `Act as a legal analyst. Your goal is to simplify and explain the following legal topic for a general audience: "${query}". You MUST provide a clear disclaimer that this is not legal advice. Also provide a plain English summary, define key terms, list main points, and cite credible sources. Return the entire analysis in the specified JSON format.`,
+              config: {
+                  responseMimeType: "application/json",
+                  responseSchema: legalSchema,
+              },
+          });
+
+          const jsonText = response.text.trim();
+          const parsedData = JSON.parse(jsonText);
+
+          if (!parsedData.disclaimer || !parsedData.plainSummary || !parsedData.keyTerms) {
+              throw new Error("Received incomplete legal data from the API.");
+          }
+
+          return parsedData as LegalData;
+      } catch (error) {
+          console.error("Error in performDeepLegal:", error);
+          throw new Error("Failed to fetch or parse legal data from the Gemini API.");
+      }
+  }
+
+  async performDeepFinance(query: string): Promise<FinanceData> {
+      console.log(`Performing deep finance for: ${query}`);
+      try {
+          const response = await this.ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: `Act as a financial analyst. Your goal is to provide an objective and educational analysis of the financial topic: "${query}". You MUST provide a clear disclaimer that this is not financial advice. Also provide a detailed summary, explain key metrics, list the pros and cons, and cite credible sources. Return the entire analysis in the specified JSON format.`,
+              config: {
+                  responseMimeType: "application/json",
+                  responseSchema: financeSchema,
+              },
+          });
+
+          const jsonText = response.text.trim();
+          const parsedData = JSON.parse(jsonText);
+
+          if (!parsedData.disclaimer || !parsedData.summary || !parsedData.keyMetrics) {
+              throw new Error("Received incomplete finance data from the API.");
+          }
+
+          return parsedData as FinanceData;
+      } catch (error) {
+          console.error("Error in performDeepFinance:", error);
+          throw new Error("Failed to fetch or parse finance data from the Gemini API.");
       }
   }
 

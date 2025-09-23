@@ -7,47 +7,36 @@ import SearchPage from './components/SearchPage';
 import ResultsPage from './components/ResultsPage';
 import LoadingState from './components/LoadingState';
 import AgentLoadingState from './components/AgentLoadingState';
-import ApiKeyPage from './components/ApiKeyPage';
 import Agent2Page from './components/Agent2Page';
 import { GeminiService } from './services/geminiService';
-import type { ResearchData, CanvasData, AgentData, DebateData, StudyData, StudioData, TripData, HealthData, InterviewData, MarketData, ChefData, GameData } from './types';
+import type { AnyData, HistoryItem } from './types';
 import { AppState, ResearchMode } from './types';
 
 type Page = 'home' | 'history' | 'settings';
 
 const App: React.FC = () => {
-  const [apiKey, setApiKey] = useState<string | null>(() => localStorage.getItem('gemini_api_key') || 'AIzaSyAl-3KSM8MDzZzZWtROP_zLzto5IPjZ4mo');
   const [geminiService, setGeminiService] = useState<GeminiService | null>(null);
   const [appState, setAppState] = useState<AppState>(AppState.MODE_SELECTION);
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [selectedMode, setSelectedMode] = useState<ResearchMode | null>(null);
   const [query, setQuery] = useState<string>('');
-  const [researchData, setResearchData] = useState<ResearchData | CanvasData | AgentData | DebateData | StudyData | StudioData | TripData | HealthData | InterviewData | MarketData | ChefData | GameData | null>(null);
+  const [researchData, setResearchData] = useState<AnyData | null>(null);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  // FIX: Initialize GeminiService without an API key argument, as it now sources it from environment variables.
+  // This also removes the dependency on the now-deleted apiKey state.
   useEffect(() => {
-    if (apiKey) {
-      try {
-        setGeminiService(new GeminiService(apiKey));
-      } catch (e) {
-        console.error("Failed to initialize Gemini Service", e);
-        localStorage.removeItem('gemini_api_key');
-        setApiKey(null);
+    try {
+      setGeminiService(new GeminiService());
+      const storedHistory = localStorage.getItem('silo_research_history');
+      if (storedHistory) {
+        setHistory(JSON.parse(storedHistory));
       }
+    } catch (e) {
+      console.error("Failed to initialize Gemini Service or load history", e);
+      setError("Failed to initialize Gemini Service. Ensure the API key is set correctly in environment variables.");
     }
-  }, [apiKey]);
-
-  const handleApiKeySubmit = (key: string) => {
-    localStorage.setItem('gemini_api_key', key);
-    setApiKey(key);
-    setCurrentPage('home');
-  };
-  
-  const handleClearApiKey = useCallback(() => {
-    localStorage.removeItem('gemini_api_key');
-    setApiKey(null);
-    setGeminiService(null);
-    setCurrentPage('home');
   }, []);
 
   const handleModeSelect = useCallback((mode: ResearchMode) => {
@@ -71,7 +60,7 @@ const App: React.FC = () => {
     setAppState(AppState.LOADING);
     setError(null);
     try {
-      let data;
+      let data: AnyData;
       switch (selectedMode) {
         case ResearchMode.DEEP_CANVAS:
           data = await geminiService.performCanvasGeneration(searchQuery);
@@ -106,6 +95,15 @@ const App: React.FC = () => {
         case ResearchMode.DEEP_GAME:
             data = await geminiService.performDeepGame(searchQuery);
             break;
+        case ResearchMode.DEEP_CODE:
+            data = await geminiService.performDeepCode(searchQuery);
+            break;
+        case ResearchMode.DEEP_LEGAL:
+            data = await geminiService.performDeepLegal(searchQuery);
+            break;
+        case ResearchMode.DEEP_FINANCE:
+            data = await geminiService.performDeepFinance(searchQuery);
+            break;
         case ResearchMode.DEEP_RESEARCH:
         default:
           data = await geminiService.performDeepResearch(searchQuery);
@@ -113,6 +111,21 @@ const App: React.FC = () => {
       }
       setResearchData(data);
       setAppState(AppState.RESULTS);
+      
+      const newHistoryItem: HistoryItem = {
+        id: Date.now().toString(),
+        query: searchQuery,
+        mode: selectedMode,
+        data: data,
+        timestamp: Date.now(),
+      };
+
+      setHistory(prevHistory => {
+        const updatedHistory = [newHistoryItem, ...prevHistory].slice(0, 50); // Keep latest 50
+        localStorage.setItem('silo_research_history', JSON.stringify(updatedHistory));
+        return updatedHistory;
+      });
+
     } catch (err) {
       console.error(err);
       setError('An error occurred during the process. Please try again.');
@@ -133,6 +146,19 @@ const App: React.FC = () => {
     setAppState(AppState.MODE_SELECTION);
     setSelectedMode(null);
     setError(null);
+  }, []);
+
+  const handleRestoreSession = useCallback((item: HistoryItem) => {
+    setSelectedMode(item.mode);
+    setQuery(item.query);
+    setResearchData(item.data);
+    setAppState(AppState.RESULTS);
+    setCurrentPage('home');
+  }, []);
+
+  const handleClearHistory = useCallback(() => {
+    setHistory([]);
+    localStorage.removeItem('silo_research_history');
   }, []);
   
   const renderHomePage = () => {
@@ -156,24 +182,23 @@ const App: React.FC = () => {
   };
 
   const renderContent = () => {
-    if (!apiKey) {
-      return <ApiKeyPage onSubmit={handleApiKeySubmit} />;
-    }
-
+    // FIX: Removed ApiKeyPage rendering logic as API key is now handled by environment variables.
     switch (currentPage) {
         case 'home':
             return renderHomePage();
         case 'history':
-            return <HistoryPage />;
+            return <HistoryPage history={history} onRestore={handleRestoreSession} onClear={handleClearHistory} />;
         case 'settings':
-            return <SettingsPage onClearApiKey={handleClearApiKey} />;
+            // FIX: Removed onClearApiKey prop as API key management is removed from UI.
+            return <SettingsPage />;
         default:
             return renderHomePage();
     }
   };
 
   const isAgentLoading = appState === AppState.LOADING && selectedMode === ResearchMode.DEEP_AGENT;
-  const showNavbar = apiKey && !isAgentLoading;
+  // FIX: Removed dependency on apiKey state, which no longer exists.
+  const showNavbar = !isAgentLoading;
 
   return (
     <div className="h-screen bg-gray-50 font-sans text-gray-800">

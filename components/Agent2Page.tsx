@@ -9,7 +9,7 @@ interface Agent2PageProps {
 }
 
 const Agent2Page: React.FC<Agent2PageProps> = ({ query, onReset, geminiService }) => {
-  const searchUrl = `https://www.duckduckgo.com/?q=${encodeURIComponent(query)}&ia=web`;
+  const searchUrl = `https://www.duckduckgo.com/`;
 
   return (
     <div className="flex flex-col h-full bg-gray-100">

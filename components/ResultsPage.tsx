@@ -1,12 +1,12 @@
 import React from 'react';
-import type { ResearchData, CanvasData, AgentData, DebateData, StudyData, StudioData, TripData, HealthData, InterviewData, MarketData, ChefData, GameData } from '../types';
+import type { AnyData } from '../types';
 import LeftPane from './LeftPane';
 import ChatPane from './ChatPane';
 import type { GeminiService } from '../services/geminiService';
 
 interface ResultsPageProps {
   query: string;
-  data: ResearchData | CanvasData | AgentData | DebateData | StudyData | StudioData | TripData | HealthData | InterviewData | MarketData | ChefData | GameData;
+  data: AnyData;
   onReset: () => void;
   geminiService: GeminiService;
 }

@@ -14,7 +14,7 @@ const modeDetails = {
     [ResearchMode.DEEP_RESEARCH]: { title: 'Deep Research', placeholder: "What do you want to deep research today?" },
     [ResearchMode.DEEP_CANVAS]: { title: 'Deep Canvas', placeholder: "What kind of app do you want to build?" },
     [ResearchMode.DEEP_AGENT]: { title: 'Deep Agent', placeholder: "What topic should the AI agent investigate?" },
-    [ResearchMode.DEEP_AGENT_2]: { title: 'Deep Agent 2.0', placeholder: "What do you want to search the web for?" },
+    [ResearchMode.DEEP_AGENT_2]: { title: 'Deep Agent 2.0', placeholder: "Enter a topic to start your research session..." },
     [ResearchMode.DEEP_DEBATE]: { title: 'Deep Debate', placeholder: "Enter a controversial topic to debate..." },
     [ResearchMode.DEEP_STUDY]: { title: 'Deep Study', placeholder: "What topic do you want a study guide for?" },
     [ResearchMode.DEEP_STUDIO]: { title: 'Deep Studio', placeholder: "Enter a topic for your next viral video..." },
@@ -24,6 +24,9 @@ const modeDetails = {
     [ResearchMode.DEEP_MARKET]: { title: 'Deep Market', placeholder: "Describe your business or product idea..." },
     [ResearchMode.DEEP_CHEF]: { title: 'Deep Chef', placeholder: "List ingredients or describe a dish..." },
     [ResearchMode.DEEP_GAME]: { title: 'Deep Game', placeholder: "Describe your game idea..." },
+    [ResearchMode.DEEP_CODE]: { title: 'Deep Code', placeholder: "Describe a coding problem or algorithm..." },
+    [ResearchMode.DEEP_LEGAL]: { title: 'Deep Legal', placeholder: "Enter a legal topic to simplify..." },
+    [ResearchMode.DEEP_FINANCE]: { title: 'Deep Finance', placeholder: "Enter a financial concept to analyze..." },
 };
 
 const SearchPage: React.FC<SearchPageProps> = ({ mode, onSearch, onBack, error }) => {

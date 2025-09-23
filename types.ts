@@ -1,3 +1,23 @@
+// FIX: Added import for React to use React.FC type.
+import React from 'react';
+// FIX: Removed circular dependency import from './types' that caused conflicts.
+import { DeepResearchIcon } from './components/icons/DeepResearchIcon';
+import { DeepCanvasIcon } from './components/icons/DeepCanvasIcon';
+import { DeepAgentIcon } from './components/icons/DeepAgentIcon';
+import { DeepAgent2Icon } from './components/icons/DeepAgent2Icon';
+import { DeepDebateIcon } from './components/icons/DeepDebateIcon';
+import { DeepStudyIcon } from './components/icons/DeepStudyIcon';
+import { DeepStudioIcon } from './components/icons/DeepStudioIcon';
+import { DeepTripIcon } from './components/icons/DeepTripIcon';
+import { DeepHealthIcon } from './components/icons/DeepHealthIcon';
+import { DeepInterviewIcon } from './components/icons/DeepInterviewIcon';
+import { DeepMarketIcon } from './components/icons/DeepMarketIcon';
+import { DeepChefIcon } from './components/icons/DeepChefIcon';
+import { DeepGameIcon } from './components/icons/DeepGameIcon';
+import { DeepCodeIcon } from './components/icons/DeepCodeIcon';
+import { DeepLegalIcon } from './components/icons/DeepLegalIcon';
+import { DeepFinanceIcon } from './components/icons/DeepFinanceIcon';
+
 export enum AppState {
   MODE_SELECTION,
   SEARCHING,
@@ -19,6 +39,9 @@ export enum ResearchMode {
   DEEP_MARKET = 'DEEP_MARKET',
   DEEP_CHEF = 'DEEP_CHEF',
   DEEP_GAME = 'DEEP_GAME',
+  DEEP_CODE = 'DEEP_CODE',
+  DEEP_LEGAL = 'DEEP_LEGAL',
+  DEEP_FINANCE = 'DEEP_FINANCE',
 }
 
 export interface Source {
@@ -279,6 +302,53 @@ export interface GameData {
     sources: Source[];
 }
 
+export interface CodeSnippet {
+    language: string;
+    code: string;
+}
+
+export interface CodeData {
+    problemStatement: string;
+    solutionExplanation: string;
+    codeSnippets: CodeSnippet[];
+    edgeCases: string[];
+    sources: Source[];
+}
+
+export interface LegalTerm {
+    term: string;
+    definition: string;
+}
+
+export interface LegalData {
+    topic: string;
+    disclaimer: string;
+    plainSummary: string;
+    keyTerms: LegalTerm[];
+    mainPoints: string[];
+    sources: Source[];
+}
+
+export interface FinanceMetric {
+    metric: string;
+    value: string;
+    explanation: string;
+}
+
+export interface FinanceProsCons {
+    pros: string[];
+    cons: string[];
+}
+
+export interface FinanceData {
+    topic: string;
+    disclaimer: string;
+    summary: string;
+    keyMetrics: FinanceMetric[];
+    prosAndCons: FinanceProsCons;
+    sources: Source[];
+}
+
 
 export interface GroundingChunk {
     web: {
@@ -292,3 +362,32 @@ export interface ChatMessage {
     text: string;
     sources?: GroundingChunk[];
 }
+
+export type AnyData = ResearchData | CanvasData | AgentData | DebateData | StudyData | StudioData | TripData | HealthData | InterviewData | MarketData | ChefData | GameData | CodeData | LegalData | FinanceData;
+
+export interface HistoryItem {
+  id: string;
+  query: string;
+  mode: ResearchMode;
+  data: AnyData;
+  timestamp: number;
+}
+
+export const modeDetails: Record<ResearchMode, { Icon: React.FC; title: string; description: string; tag: { text: string; color: string; }}> = {
+    [ResearchMode.DEEP_RESEARCH]: { Icon: DeepResearchIcon, title: 'Deep Research', description: 'In-depth analysis with sources, flashcards, and more.', tag: { text: 'CORE', color: 'bg-gray-200 text-gray-700' } },
+    [ResearchMode.DEEP_AGENT]: { Icon: DeepAgentIcon, title: 'Deep Agent', description: 'Autonomous AI agent that shows its research path.', tag: { text: 'PRO', color: 'bg-purple-100 text-purple-800' } },
+    [ResearchMode.DEEP_AGENT_2]: { Icon: DeepAgent2Icon, title: 'Deep Agent 2.0', description: 'Browse the web and chat with a search-powered AI.', tag: { text: 'BETA', color: 'bg-teal-100 text-teal-800' } },
+    [ResearchMode.DEEP_CANVAS]: { Icon: DeepCanvasIcon, title: 'Deep Canvas', description: 'Generate a fully functional web app from a prompt.', tag: { text: 'NEW', color: 'bg-blue-100 text-blue-800' } },
+    [ResearchMode.DEEP_CODE]: { Icon: DeepCodeIcon, title: 'Deep Code', description: 'Solve coding problems with explanations and snippets.', tag: { text: 'NEW', color: 'bg-gray-800 text-gray-100' } },
+    [ResearchMode.DEEP_LEGAL]: { Icon: DeepLegalIcon, title: 'Deep Legal', description: 'Simplify complex legal topics into plain English.', tag: { text: 'BETA', color: 'bg-amber-100 text-amber-800' } },
+    [ResearchMode.DEEP_FINANCE]: { Icon: DeepFinanceIcon, title: 'Deep Finance', description: 'Analyze financial concepts with key metrics.', tag: { text: 'BETA', color: 'bg-emerald-100 text-emerald-800' } },
+    [ResearchMode.DEEP_DEBATE]: { Icon: DeepDebateIcon, title: 'Deep Debate', description: 'Explore both sides of a controversial topic.', tag: { text: 'BETA', color: 'bg-green-100 text-green-800' } },
+    [ResearchMode.DEEP_STUDY]: { Icon: DeepStudyIcon, title: 'Deep Study', description: 'Create a personalized study guide for any subject.', tag: { text: 'NEW', color: 'bg-yellow-100 text-yellow-800' } },
+    [ResearchMode.DEEP_STUDIO]: { Icon: DeepStudioIcon, title: 'Deep Studio', description: 'Generate video ideas, scripts, and SEO keywords.', tag: { text: 'NEW', color: 'bg-red-100 text-red-800' } },
+    [ResearchMode.DEEP_TRIP]: { Icon: DeepTripIcon, title: 'Deep Trip', description: 'Plan your next vacation with a detailed itinerary.', tag: { text: 'NEW', color: 'bg-indigo-100 text-indigo-800' } },
+    [ResearchMode.DEEP_HEALTH]: { Icon: DeepHealthIcon, title: 'Deep Health', description: 'Get a personalized workout and meal plan.', tag: { text: 'NEW', color: 'bg-pink-100 text-pink-800' } },
+    [ResearchMode.DEEP_INTERVIEW]: { Icon: DeepInterviewIcon, title: 'Deep Interview', description: 'Ace your next job interview with prep materials.', tag: { text: 'NEW', color: 'bg-cyan-100 text-cyan-800' } },
+    [ResearchMode.DEEP_MARKET]: { Icon: DeepMarketIcon, title: 'Deep Market', description: 'Analyze market trends for your business idea.', tag: { text: 'NEW', color: 'bg-orange-100 text-orange-800' } },
+    [ResearchMode.DEEP_CHEF]: { Icon: DeepChefIcon, title: 'Deep Chef', description: 'Generate a complete recipe from ingredients or a dish idea.', tag: { text: 'NEW', color: 'bg-lime-100 text-lime-800' } },
+    [ResearchMode.DEEP_GAME]: { Icon: DeepGameIcon, title: 'Deep Game', description: 'Design a game concept with mechanics and characters.', tag: { text: 'NEW', color: 'bg-rose-100 text-rose-800' } },
+};
