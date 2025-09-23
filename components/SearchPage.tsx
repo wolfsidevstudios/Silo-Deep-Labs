@@ -35,7 +35,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ mode, onSearch, onBack, error }
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-full">
       <header className="absolute top-0 left-0 p-8">
         <button onClick={onBack} className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 group">
           <BackArrowIcon />

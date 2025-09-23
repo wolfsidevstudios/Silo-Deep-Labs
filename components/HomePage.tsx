@@ -35,7 +35,7 @@ const researchModes = [
 
 const ModeSelectionPage: React.FC<ModeSelectionPageProps> = ({ onModeSelect }) => {
   return (
-    <div className="flex flex-col min-h-screen p-4 sm:p-6 md:p-8">
+    <div className="flex flex-col p-4 sm:p-6 md:p-8">
       <header className="flex items-center space-x-4">
         <h1 className="text-2xl font-bold text-gray-800">Silo labs</h1>
         <div className="bg-gray-200 text-gray-700 text-sm font-medium px-4 py-1 rounded-full">

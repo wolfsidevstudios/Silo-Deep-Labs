@@ -9,12 +9,11 @@ interface ResultsPageProps {
   data: ResearchData | CanvasData | AgentData | DebateData | StudyData | StudioData | TripData | HealthData | InterviewData | MarketData | ChefData | GameData;
   onReset: () => void;
   geminiService: GeminiService;
-  onClearApiKey: () => void;
 }
 
-const ResultsPage: React.FC<ResultsPageProps> = ({ query, data, onReset, geminiService, onClearApiKey }) => {
+const ResultsPage: React.FC<ResultsPageProps> = ({ query, data, onReset, geminiService }) => {
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
+    <div className="flex flex-col h-full bg-gray-100">
       <header className="px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 md:pt-8 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center space-x-4">
           <h1 className="text-2xl font-bold text-gray-800 cursor-pointer" onClick={onReset}>Silo labs</h1>
@@ -23,9 +22,6 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ query, data, onReset, geminiS
           </div>
         </div>
         <div className="flex items-center space-x-4">
-            <button onClick={onClearApiKey} className="text-sm font-medium text-gray-500 hover:text-gray-800 hover:underline">
-                Change Key
-            </button>
             <button onClick={onReset} className="text-sm font-medium text-blue-600 hover:underline">
               New Research
             </button>
