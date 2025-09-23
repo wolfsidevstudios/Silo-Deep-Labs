@@ -3,6 +3,7 @@ import { ResearchMode } from '../types';
 import { DeepResearchIcon } from './icons/DeepResearchIcon';
 import { DeepCanvasIcon } from './icons/DeepCanvasIcon';
 import { DeepAgentIcon } from './icons/DeepAgentIcon';
+import { DeepAgent2Icon } from './icons/DeepAgent2Icon';
 import { DeepDebateIcon } from './icons/DeepDebateIcon';
 import { DeepStudyIcon } from './icons/DeepStudyIcon';
 import { DeepStudioIcon } from './icons/DeepStudioIcon';
@@ -21,6 +22,7 @@ interface ModeSelectionPageProps {
 const researchModes = [
     { id: ResearchMode.DEEP_RESEARCH, Icon: DeepResearchIcon, title: 'Deep Research', description: 'In-depth analysis with sources, flashcards, and more.', tag: { text: 'CORE', color: 'bg-gray-200 text-gray-700' } },
     { id: ResearchMode.DEEP_AGENT, Icon: DeepAgentIcon, title: 'Deep Agent', description: 'Autonomous AI agent that shows its research path.', tag: { text: 'PRO', color: 'bg-purple-100 text-purple-800' } },
+    { id: ResearchMode.DEEP_AGENT_2, Icon: DeepAgent2Icon, title: 'Deep Agent 2.0', description: 'Browse the web and chat with a search-powered AI.', tag: { text: 'BETA', color: 'bg-teal-100 text-teal-800' } },
     { id: ResearchMode.DEEP_CANVAS, Icon: DeepCanvasIcon, title: 'Deep Canvas', description: 'Generate a fully functional web app from a prompt.', tag: { text: 'NEW', color: 'bg-blue-100 text-blue-800' } },
     { id: ResearchMode.DEEP_DEBATE, Icon: DeepDebateIcon, title: 'Deep Debate', description: 'Explore both sides of a controversial topic.', tag: { text: 'BETA', color: 'bg-green-100 text-green-800' } },
     { id: ResearchMode.DEEP_STUDY, Icon: DeepStudyIcon, title: 'Deep Study', description: 'Create a personalized study guide for any subject.', tag: { text: 'NEW', color: 'bg-yellow-100 text-yellow-800' } },

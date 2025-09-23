@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Chat } from "@google/genai";
-import type { ResearchData, CanvasData, AgentData, DebateData, StudyData, StudioData, TripData, HealthData, InterviewData, MarketData, ChefData, GameData } from '../types';
+import type { ResearchData, CanvasData, AgentData, DebateData, StudyData, StudioData, TripData, HealthData, InterviewData, MarketData, ChefData, GameData, ChatMessage, GroundingChunk } from '../types';
 
 const researchSchema = {
   type: Type.OBJECT,
@@ -1022,5 +1022,32 @@ export class GeminiService {
         systemInstruction: `You are a helpful research assistant. The user has just completed deep research on the topic: "${query}". Your role is to answer follow-up questions concisely and accurately based on general knowledge related to this topic.`,
       },
     });
+  }
+
+  async sendMessageWithGoogleSearch(history: ChatMessage[], newMessage: string): Promise<{ text: string, sources: GroundingChunk[] | undefined }> {
+      const contents = history.map(msg => ({
+          role: msg.role as 'user' | 'model',
+          parts: [{ text: msg.text }]
+      }));
+      contents.push({ role: 'user', parts: [{ text: newMessage }] });
+
+      try {
+        const response = await this.ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            // @ts-ignore
+            contents: contents,
+            config: {
+                tools: [{googleSearch: {}}],
+            },
+        });
+
+        const text = response.text;
+        const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks as GroundingChunk[] | undefined;
+        
+        return { text, sources };
+      } catch (error) {
+        console.error("Error in sendMessageWithGoogleSearch:", error);
+        throw new Error("Failed to fetch or parse data from the Gemini API with Google Search.");
+      }
   }
 }

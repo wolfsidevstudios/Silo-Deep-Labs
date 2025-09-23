@@ -9,6 +9,7 @@ export enum ResearchMode {
   DEEP_RESEARCH = 'DEEP_RESEARCH',
   DEEP_CANVAS = 'DEEP_CANVAS',
   DEEP_AGENT = 'DEEP_AGENT',
+  DEEP_AGENT_2 = 'DEEP_AGENT_2',
   DEEP_DEBATE = 'DEEP_DEBATE',
   DEEP_STUDY = 'DEEP_STUDY',
   DEEP_STUDIO = 'DEEP_STUDIO',
@@ -279,7 +280,15 @@ export interface GameData {
 }
 
 
+export interface GroundingChunk {
+    web: {
+        uri: string;
+        title: string;
+    }
+}
+
 export interface ChatMessage {
     role: 'user' | 'model';
     text: string;
+    sources?: GroundingChunk[];
 }

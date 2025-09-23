@@ -8,6 +8,7 @@ import ResultsPage from './components/ResultsPage';
 import LoadingState from './components/LoadingState';
 import AgentLoadingState from './components/AgentLoadingState';
 import ApiKeyPage from './components/ApiKeyPage';
+import Agent2Page from './components/Agent2Page';
 import { GeminiService } from './services/geminiService';
 import type { ResearchData, CanvasData, AgentData, DebateData, StudyData, StudioData, TripData, HealthData, InterviewData, MarketData, ChefData, GameData } from './types';
 import { AppState, ResearchMode } from './types';
@@ -59,6 +60,14 @@ const App: React.FC = () => {
   const handleSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim() || !selectedMode || !geminiService) return;
     setQuery(searchQuery);
+    
+    if (selectedMode === ResearchMode.DEEP_AGENT_2) {
+        setAppState(AppState.RESULTS);
+        setResearchData(null);
+        setError(null);
+        return;
+    }
+
     setAppState(AppState.LOADING);
     setError(null);
     try {
@@ -137,6 +146,9 @@ const App: React.FC = () => {
             ? <AgentLoadingState query={query} /> 
             : <LoadingState />;
       case AppState.RESULTS:
+        if (selectedMode === ResearchMode.DEEP_AGENT_2) {
+            return geminiService && <Agent2Page query={query} onReset={handleReset} geminiService={geminiService} />;
+        }
         return researchData && geminiService && <ResultsPage query={query} data={researchData} onReset={handleReset} geminiService={geminiService} />;
       default:
         return <ModeSelectionPage onModeSelect={handleModeSelect} />;

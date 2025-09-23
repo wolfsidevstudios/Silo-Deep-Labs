@@ -14,6 +14,7 @@ const modeDetails = {
     [ResearchMode.DEEP_RESEARCH]: { title: 'Deep Research', placeholder: "What do you want to deep research today?" },
     [ResearchMode.DEEP_CANVAS]: { title: 'Deep Canvas', placeholder: "What kind of app do you want to build?" },
     [ResearchMode.DEEP_AGENT]: { title: 'Deep Agent', placeholder: "What topic should the AI agent investigate?" },
+    [ResearchMode.DEEP_AGENT_2]: { title: 'Deep Agent 2.0', placeholder: "What do you want to search the web for?" },
     [ResearchMode.DEEP_DEBATE]: { title: 'Deep Debate', placeholder: "Enter a controversial topic to debate..." },
     [ResearchMode.DEEP_STUDY]: { title: 'Deep Study', placeholder: "What topic do you want a study guide for?" },
     [ResearchMode.DEEP_STUDIO]: { title: 'Deep Studio', placeholder: "Enter a topic for your next viral video..." },
