@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { Chat } from '@google/genai';
-import { createChat } from '../services/geminiService';
+import type { GeminiService } from '../services/geminiService';
 import type { ChatMessage } from '../types';
 import { SendIcon } from './icons/SendIcon';
 
 interface ChatPaneProps {
   query: string;
+  geminiService: GeminiService;
 }
 
-const ChatPane: React.FC<ChatPaneProps> = ({ query }) => {
+const ChatPane: React.FC<ChatPaneProps> = ({ query, geminiService }) => {
   const [chat, setChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -16,12 +17,12 @@ const ChatPane: React.FC<ChatPaneProps> = ({ query }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const chatInstance = createChat(query);
+    const chatInstance = geminiService.createChat(query);
     setChat(chatInstance);
     setMessages([
         { role: 'model', text: `I'm ready to answer your follow-up questions about ${query}.` }
     ]);
-  }, [query]);
+  }, [query, geminiService]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

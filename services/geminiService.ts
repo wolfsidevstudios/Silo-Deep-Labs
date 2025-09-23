@@ -1,12 +1,6 @@
 import { GoogleGenAI, Type, Chat } from "@google/genai";
 import type { ResearchData, CanvasData, AgentData, DebateData, StudyData, StudioData, TripData, HealthData, InterviewData, MarketData, ChefData, GameData } from '../types';
 
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable is not set");
-}
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const researchSchema = {
   type: Type.OBJECT,
   properties: {
@@ -678,346 +672,355 @@ const gameSchema = {
     required: ["title", "concept", "coreMechanics", "characterConcepts", "monetization", "sources"]
 };
 
+export class GeminiService {
+  private ai: GoogleGenAI;
 
-export const performDeepResearch = async (query: string): Promise<ResearchData> => {
-  console.log(`Performing deep research for: ${query}`);
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: `Perform a deep research analysis on the following topic: "${query}". Provide a comprehensive summary, credible sources, study flashcards, ideas for related videos, and data for a mini-app visualization.`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: researchSchema,
-      },
-    });
-
-    const jsonText = response.text.trim();
-    const parsedData = JSON.parse(jsonText);
-    
-    if (!parsedData.summary || !parsedData.sources || !parsedData.flashCards) {
-        throw new Error("Received incomplete data from the API.");
+  constructor(apiKey: string) {
+    if (!apiKey) {
+      throw new Error("API key is required to initialize GeminiService.");
     }
-
-    return parsedData as ResearchData;
-  } catch (error) {
-    console.error("Error in performDeepResearch:", error);
-    throw new Error("Failed to fetch or parse research data from the Gemini API.");
+    this.ai = new GoogleGenAI({ apiKey });
   }
-};
 
-export const performAgentResearch = async (query: string): Promise<AgentData> => {
-  console.log(`Performing agent research for: ${query}`);
-  try {
-      const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: `Act as an autonomous research agent. Your goal is to conduct a deep investigation into the topic: "${query}". You must document your step-by-step process, including your reasoning at each stage. Formulate a plan, find sources, synthesize information, and produce a final summary. Your entire process and findings must be returned in the specified JSON format.`,
-          config: {
-              responseMimeType: "application/json",
-              responseSchema: agentSchema,
-          },
+  async performDeepResearch(query: string): Promise<ResearchData> {
+    console.log(`Performing deep research for: ${query}`);
+    try {
+      const response = await this.ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: `Perform a deep research analysis on the following topic: "${query}". Provide a comprehensive summary, credible sources, study flashcards, ideas for related videos, and data for a mini-app visualization.`,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: researchSchema,
+        },
+      });
+
+      const jsonText = response.text.trim();
+      const parsedData = JSON.parse(jsonText);
+      
+      if (!parsedData.summary || !parsedData.sources || !parsedData.flashCards) {
+          throw new Error("Received incomplete data from the API.");
+      }
+
+      return parsedData as ResearchData;
+    } catch (error) {
+      console.error("Error in performDeepResearch:", error);
+      throw new Error("Failed to fetch or parse research data from the Gemini API.");
+    }
+  }
+
+  async performAgentResearch(query: string): Promise<AgentData> {
+    console.log(`Performing agent research for: ${query}`);
+    try {
+        const response = await this.ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: `Act as an autonomous research agent. Your goal is to conduct a deep investigation into the topic: "${query}". You must document your step-by-step process, including your reasoning at each stage. Formulate a plan, find sources, synthesize information, and produce a final summary. Your entire process and findings must be returned in the specified JSON format.`,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: agentSchema,
+            },
+        });
+
+        const jsonText = response.text.trim();
+        const parsedData = JSON.parse(jsonText);
+
+        if (!parsedData.summary || !parsedData.sources || !parsedData.agentPath) {
+            throw new Error("Received incomplete agent data from the API.");
+        }
+
+        return parsedData as AgentData;
+    } catch (error) {
+        console.error("Error in performAgentResearch:", error);
+        throw new Error("Failed to fetch or parse agent research data from the Gemini API.");
+    }
+  }
+
+  async performCanvasGeneration(query: string): Promise<CanvasData> {
+    console.log(`Performing canvas generation for: ${query}`);
+    try {
+      const response = await this.ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: `You are a web developer AI. Your task is to build a single-page application based on a user's request. You must provide the complete HTML, CSS, and JavaScript code for the application. Also, list any sources you used to gather information for the content of the app. Make sure the app is visually appealing.
+        
+        Request: "${query}"`,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: canvasSchema,
+        },
+      });
+
+      const jsonText = response.text.trim();
+      const parsedData = JSON.parse(jsonText);
+      
+      if (!parsedData.code || !parsedData.sources) {
+          throw new Error("Received incomplete data from the API for canvas generation.");
+      }
+
+      return parsedData as CanvasData;
+    } catch (error) {
+      console.error("Error in performCanvasGeneration:", error);
+      throw new Error("Failed to fetch or parse canvas data from the Gemini API.");
+    }
+  }
+
+  async performDeepDebate(query: string): Promise<DebateData> {
+    console.log(`Performing deep debate for: ${query}`);
+    try {
+      const response = await this.ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: `Act as an unbiased moderator and researcher. Your goal is to conduct a deep analysis of the debate topic: "${query}". 
+        
+        You must:
+        1. Identify the primary, distinct viewpoints in this debate.
+        2. For each viewpoint, summarize its core position.
+        3. For each viewpoint, present its strongest arguments, including the claim, supporting evidence, and a common counter-argument.
+        4. Identify any points of consensus or common ground between the viewpoints.
+        5. List the key unresolved questions that are central to the ongoing debate.
+        6. Provide a list of credible sources you consulted.
+
+        Return the entire analysis in the specified JSON format.`,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: debateSchema,
+        },
       });
 
       const jsonText = response.text.trim();
       const parsedData = JSON.parse(jsonText);
 
-      if (!parsedData.summary || !parsedData.sources || !parsedData.agentPath) {
-          throw new Error("Received incomplete agent data from the API.");
+      if (!parsedData.topic || !parsedData.viewpoints || !parsedData.sources) {
+          throw new Error("Received incomplete debate data from the API.");
       }
 
-      return parsedData as AgentData;
-  } catch (error) {
-      console.error("Error in performAgentResearch:", error);
-      throw new Error("Failed to fetch or parse agent research data from the Gemini API.");
+      return parsedData as DebateData;
+    } catch (error) {
+      console.error("Error in performDeepDebate:", error);
+      throw new Error("Failed to fetch or parse debate data from the Gemini API.");
+    }
   }
-};
 
-export const performCanvasGeneration = async (query: string): Promise<CanvasData> => {
-  console.log(`Performing canvas generation for: ${query}`);
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: `You are a web developer AI. Your task is to build a single-page application based on a user's request. You must provide the complete HTML, CSS, and JavaScript code for the application. Also, list any sources you used to gather information for the content of the app. Make sure the app is visually appealing.
-      
-      Request: "${query}"`,
+  async performDeepStudy(query: string): Promise<StudyData> {
+      console.log(`Performing deep study for: ${query}`);
+      try {
+          const response = await this.ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: `Act as an expert tutor and instructional designer. Your goal is to create a comprehensive, engaging, and effective study guide for the topic: "${query}". 
+        
+              You must provide:
+              1. Key Concepts: The most important foundational ideas.
+              2. Study Plan: A structured plan to guide the learner.
+              3. Practice Problems: Questions to test knowledge and application.
+              4. Analogies: Simple ways to understand complex parts.
+              5. Sources: Credible references for further reading.
+
+              Return the entire study guide in the specified JSON format.`,
+              config: {
+                  responseMimeType: "application/json",
+                  responseSchema: studySchema,
+              },
+          });
+
+          const jsonText = response.text.trim();
+          const parsedData = JSON.parse(jsonText);
+
+          if (!parsedData.keyConcepts || !parsedData.studyPlan || !parsedData.sources) {
+              throw new Error("Received incomplete study data from the API.");
+          }
+
+          return parsedData as StudyData;
+      } catch (error) {
+          console.error("Error in performDeepStudy:", error);
+          throw new Error("Failed to fetch or parse study guide data from the Gemini API.");
+      }
+  }
+
+  async performDeepStudio(query: string): Promise<StudioData> {
+      console.log(`Performing deep studio for: ${query}`);
+      try {
+          const response = await this.ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: `Act as a creative strategist for a content creator on platforms like YouTube and TikTok. Your goal is to develop a complete content package for the topic: "${query}". You must generate engaging video ideas, a detailed script for one of them, SEO keywords, relevant hashtags, and cite your sources. Return the entire package in the specified JSON format.`,
+              config: {
+                  responseMimeType: "application/json",
+                  responseSchema: studioSchema,
+              },
+          });
+
+          const jsonText = response.text.trim();
+          const parsedData = JSON.parse(jsonText);
+
+          if (!parsedData.videoIdeas || !parsedData.script || !parsedData.sources) {
+              throw new Error("Received incomplete studio data from the API.");
+          }
+
+          return parsedData as StudioData;
+      } catch (error) {
+          console.error("Error in performDeepStudio:", error);
+          throw new Error("Failed to fetch or parse studio data from the Gemini API.");
+      }
+  }
+
+  async performDeepTrip(query: string): Promise<TripData> {
+      console.log(`Performing deep trip for: ${query}`);
+      try {
+          const response = await this.ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: `Act as an expert travel agent. Your goal is to create a comprehensive and inspiring travel plan based on the user's request: "${query}". You must provide a trip summary, a detailed day-by-day itinerary, a practical packing list, a budget breakdown, and credible sources. Return the entire plan in the specified JSON format.`,
+              config: {
+                  responseMimeType: "application/json",
+                  responseSchema: tripSchema,
+              },
+          });
+
+          const jsonText = response.text.trim();
+          const parsedData = JSON.parse(jsonText);
+
+          if (!parsedData.itinerary || !parsedData.packingList || !parsedData.sources) {
+              throw new Error("Received incomplete trip data from the API.");
+          }
+
+          return parsedData as TripData;
+      } catch (error) {
+          console.error("Error in performDeepTrip:", error);
+          throw new Error("Failed to fetch or parse trip data from the Gemini API.");
+      }
+  }
+
+  async performDeepHealth(query: string): Promise<HealthData> {
+      console.log(`Performing deep health for: ${query}`);
+      try {
+          const response = await this.ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: `Act as a wellness planner. Create a personalized health and fitness plan based on the user's goal: "${query}". You MUST include a clear disclaimer that this is not medical advice and a doctor should be consulted. Also provide a workout plan, a sample meal plan, healthy habit tips, and credible sources. Return the entire plan in the specified JSON format.`,
+              config: {
+                  responseMimeType: "application/json",
+                  responseSchema: healthSchema,
+              },
+          });
+
+          const jsonText = response.text.trim();
+          const parsedData = JSON.parse(jsonText);
+
+          if (!parsedData.disclaimer || !parsedData.workoutPlan || !parsedData.mealPlan) {
+              throw new Error("Received incomplete health data from the API.");
+          }
+
+          return parsedData as HealthData;
+      } catch (error) {
+          console.error("Error in performDeepHealth:", error);
+          throw new Error("Failed to fetch or parse health data from the Gemini API.");
+      }
+  }
+
+  async performDeepInterview(query: string): Promise<InterviewData> {
+      console.log(`Performing deep interview for: ${query}`);
+      try {
+          const response = await this.ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: `Act as an expert interview coach and career advisor. Your goal is to create a comprehensive, encouraging, and actionable interview preparation guide for the job role: "${query}". Provide common, behavioral, and technical questions with high-quality sample answers and tips. Also, give advice for closing the interview strongly. Return the entire guide in the specified JSON format.`,
+              config: {
+                  responseMimeType: "application/json",
+                  responseSchema: interviewSchema,
+              },
+          });
+
+          const jsonText = response.text.trim();
+          const parsedData = JSON.parse(jsonText);
+
+          if (!parsedData.jobRole || !parsedData.commonQuestions || !parsedData.sources) {
+              throw new Error("Received incomplete interview data from the API.");
+          }
+
+          return parsedData as InterviewData;
+      } catch (error) {
+          console.error("Error in performDeepInterview:", error);
+          throw new Error("Failed to fetch or parse interview data from the Gemini API.");
+      }
+  }
+
+  async performDeepMarket(query: string): Promise<MarketData> {
+      console.log(`Performing deep market for: ${query}`);
+      try {
+          const response = await this.ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: `Act as a senior market analyst and business strategist. Your goal is to conduct a detailed and insightful market analysis for the product or business idea: "${query}". Provide a summary, target audience breakdown, competitor analysis, a full SWOT analysis, and actionable marketing strategies. Return the entire analysis in the specified JSON format.`,
+              config: {
+                  responseMimeType: "application/json",
+                  responseSchema: marketSchema,
+              },
+          });
+
+          const jsonText = response.text.trim();
+          const parsedData = JSON.parse(jsonText);
+
+          if (!parsedData.productIdea || !parsedData.swotAnalysis || !parsedData.sources) {
+              throw new Error("Received incomplete market data from the API.");
+          }
+
+          return parsedData as MarketData;
+      } catch (error) {
+          console.error("Error in performDeepMarket:", error);
+          throw new Error("Failed to fetch or parse market data from the Gemini API.");
+      }
+  }
+
+  async performDeepChef(query: string): Promise<ChefData> {
+      console.log(`Performing deep chef for: ${query}`);
+      try {
+          const response = await this.ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: `Act as an expert chef. Your goal is to create a delicious and easy-to-follow recipe based on the user's request: "${query}". Provide a recipe name, description, timings, difficulty, a complete ingredient list, and step-by-step instructions. Also include sources for your recipe. Return the entire recipe in the specified JSON format.`,
+              config: {
+                  responseMimeType: "application/json",
+                  responseSchema: chefSchema,
+              },
+          });
+
+          const jsonText = response.text.trim();
+          const parsedData = JSON.parse(jsonText);
+
+          if (!parsedData.recipeName || !parsedData.ingredients || !parsedData.instructions) {
+              throw new Error("Received incomplete recipe data from the API.");
+          }
+
+          return parsedData as ChefData;
+      } catch (error) {
+          console.error("Error in performDeepChef:", error);
+          throw new Error("Failed to fetch or parse recipe data from the Gemini API.");
+      }
+  }
+
+  async performDeepGame(query: string): Promise<GameData> {
+      console.log(`Performing deep game for: ${query}`);
+      try {
+          const response = await this.ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: `Act as an expert game designer. Your goal is to brainstorm a compelling game concept based on the user's idea: "${query}". Develop a game title, a core concept, key gameplay mechanics, interesting character concepts, and potential monetization strategies. Also include sources for inspiration. Return the entire game concept in the specified JSON format.`,
+              config: {
+                  responseMimeType: "application/json",
+                  responseSchema: gameSchema,
+              },
+          });
+
+          const jsonText = response.text.trim();
+          const parsedData = JSON.parse(jsonText);
+
+          if (!parsedData.title || !parsedData.coreMechanics || !parsedData.characterConcepts) {
+              throw new Error("Received incomplete game data from the API.");
+          }
+
+          return parsedData as GameData;
+      } catch (error) {
+          console.error("Error in performDeepGame:", error);
+          throw new Error("Failed to fetch or parse game data from the Gemini API.");
+      }
+  }
+
+  createChat(query: string): Chat {
+    return this.ai.chats.create({
+      model: 'gemini-2.5-flash',
       config: {
-        responseMimeType: "application/json",
-        responseSchema: canvasSchema,
+        systemInstruction: `You are a helpful research assistant. The user has just completed deep research on the topic: "${query}". Your role is to answer follow-up questions concisely and accurately based on general knowledge related to this topic.`,
       },
     });
-
-    const jsonText = response.text.trim();
-    const parsedData = JSON.parse(jsonText);
-    
-    if (!parsedData.code || !parsedData.sources) {
-        throw new Error("Received incomplete data from the API for canvas generation.");
-    }
-
-    return parsedData as CanvasData;
-  } catch (error) {
-    console.error("Error in performCanvasGeneration:", error);
-    throw new Error("Failed to fetch or parse canvas data from the Gemini API.");
   }
-};
-
-export const performDeepDebate = async (query: string): Promise<DebateData> => {
-  console.log(`Performing deep debate for: ${query}`);
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: `Act as an unbiased moderator and researcher. Your goal is to conduct a deep analysis of the debate topic: "${query}". 
-      
-      You must:
-      1. Identify the primary, distinct viewpoints in this debate.
-      2. For each viewpoint, summarize its core position.
-      3. For each viewpoint, present its strongest arguments, including the claim, supporting evidence, and a common counter-argument.
-      4. Identify any points of consensus or common ground between the viewpoints.
-      5. List the key unresolved questions that are central to the ongoing debate.
-      6. Provide a list of credible sources you consulted.
-
-      Return the entire analysis in the specified JSON format.`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: debateSchema,
-      },
-    });
-
-    const jsonText = response.text.trim();
-    const parsedData = JSON.parse(jsonText);
-
-    if (!parsedData.topic || !parsedData.viewpoints || !parsedData.sources) {
-        throw new Error("Received incomplete debate data from the API.");
-    }
-
-    return parsedData as DebateData;
-  } catch (error) {
-    console.error("Error in performDeepDebate:", error);
-    throw new Error("Failed to fetch or parse debate data from the Gemini API.");
-  }
-};
-
-export const performDeepStudy = async (query: string): Promise<StudyData> => {
-    console.log(`Performing deep study for: ${query}`);
-    try {
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: `Act as an expert tutor and instructional designer. Your goal is to create a comprehensive, engaging, and effective study guide for the topic: "${query}". 
-      
-            You must provide:
-            1. Key Concepts: The most important foundational ideas.
-            2. Study Plan: A structured plan to guide the learner.
-            3. Practice Problems: Questions to test knowledge and application.
-            4. Analogies: Simple ways to understand complex parts.
-            5. Sources: Credible references for further reading.
-
-            Return the entire study guide in the specified JSON format.`,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: studySchema,
-            },
-        });
-
-        const jsonText = response.text.trim();
-        const parsedData = JSON.parse(jsonText);
-
-        if (!parsedData.keyConcepts || !parsedData.studyPlan || !parsedData.sources) {
-            throw new Error("Received incomplete study data from the API.");
-        }
-
-        return parsedData as StudyData;
-    } catch (error) {
-        console.error("Error in performDeepStudy:", error);
-        throw new Error("Failed to fetch or parse study guide data from the Gemini API.");
-    }
-};
-
-export const performDeepStudio = async (query: string): Promise<StudioData> => {
-    console.log(`Performing deep studio for: ${query}`);
-    try {
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: `Act as a creative strategist for a content creator on platforms like YouTube and TikTok. Your goal is to develop a complete content package for the topic: "${query}". You must generate engaging video ideas, a detailed script for one of them, SEO keywords, relevant hashtags, and cite your sources. Return the entire package in the specified JSON format.`,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: studioSchema,
-            },
-        });
-
-        const jsonText = response.text.trim();
-        const parsedData = JSON.parse(jsonText);
-
-        if (!parsedData.videoIdeas || !parsedData.script || !parsedData.sources) {
-            throw new Error("Received incomplete studio data from the API.");
-        }
-
-        return parsedData as StudioData;
-    } catch (error) {
-        console.error("Error in performDeepStudio:", error);
-        throw new Error("Failed to fetch or parse studio data from the Gemini API.");
-    }
-};
-
-export const performDeepTrip = async (query: string): Promise<TripData> => {
-    console.log(`Performing deep trip for: ${query}`);
-    try {
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: `Act as an expert travel agent. Your goal is to create a comprehensive and inspiring travel plan based on the user's request: "${query}". You must provide a trip summary, a detailed day-by-day itinerary, a practical packing list, a budget breakdown, and credible sources. Return the entire plan in the specified JSON format.`,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: tripSchema,
-            },
-        });
-
-        const jsonText = response.text.trim();
-        const parsedData = JSON.parse(jsonText);
-
-        if (!parsedData.itinerary || !parsedData.packingList || !parsedData.sources) {
-            throw new Error("Received incomplete trip data from the API.");
-        }
-
-        return parsedData as TripData;
-    } catch (error) {
-        console.error("Error in performDeepTrip:", error);
-        throw new Error("Failed to fetch or parse trip data from the Gemini API.");
-    }
-};
-
-export const performDeepHealth = async (query: string): Promise<HealthData> => {
-    console.log(`Performing deep health for: ${query}`);
-    try {
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: `Act as a wellness planner. Create a personalized health and fitness plan based on the user's goal: "${query}". You MUST include a clear disclaimer that this is not medical advice and a doctor should be consulted. Also provide a workout plan, a sample meal plan, healthy habit tips, and credible sources. Return the entire plan in the specified JSON format.`,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: healthSchema,
-            },
-        });
-
-        const jsonText = response.text.trim();
-        const parsedData = JSON.parse(jsonText);
-
-        if (!parsedData.disclaimer || !parsedData.workoutPlan || !parsedData.mealPlan) {
-            throw new Error("Received incomplete health data from the API.");
-        }
-
-        return parsedData as HealthData;
-    } catch (error) {
-        console.error("Error in performDeepHealth:", error);
-        throw new Error("Failed to fetch or parse health data from the Gemini API.");
-    }
-};
-
-export const performDeepInterview = async (query: string): Promise<InterviewData> => {
-    console.log(`Performing deep interview for: ${query}`);
-    try {
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: `Act as an expert interview coach and career advisor. Your goal is to create a comprehensive, encouraging, and actionable interview preparation guide for the job role: "${query}". Provide common, behavioral, and technical questions with high-quality sample answers and tips. Also, give advice for closing the interview strongly. Return the entire guide in the specified JSON format.`,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: interviewSchema,
-            },
-        });
-
-        const jsonText = response.text.trim();
-        const parsedData = JSON.parse(jsonText);
-
-        if (!parsedData.jobRole || !parsedData.commonQuestions || !parsedData.sources) {
-            throw new Error("Received incomplete interview data from the API.");
-        }
-
-        return parsedData as InterviewData;
-    } catch (error) {
-        console.error("Error in performDeepInterview:", error);
-        throw new Error("Failed to fetch or parse interview data from the Gemini API.");
-    }
-};
-
-export const performDeepMarket = async (query: string): Promise<MarketData> => {
-    console.log(`Performing deep market for: ${query}`);
-    try {
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: `Act as a senior market analyst and business strategist. Your goal is to conduct a detailed and insightful market analysis for the product or business idea: "${query}". Provide a summary, target audience breakdown, competitor analysis, a full SWOT analysis, and actionable marketing strategies. Return the entire analysis in the specified JSON format.`,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: marketSchema,
-            },
-        });
-
-        const jsonText = response.text.trim();
-        const parsedData = JSON.parse(jsonText);
-
-        if (!parsedData.productIdea || !parsedData.swotAnalysis || !parsedData.sources) {
-            throw new Error("Received incomplete market data from the API.");
-        }
-
-        return parsedData as MarketData;
-    } catch (error) {
-        console.error("Error in performDeepMarket:", error);
-        throw new Error("Failed to fetch or parse market data from the Gemini API.");
-    }
-};
-
-export const performDeepChef = async (query: string): Promise<ChefData> => {
-    console.log(`Performing deep chef for: ${query}`);
-    try {
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: `Act as an expert chef. Your goal is to create a delicious and easy-to-follow recipe based on the user's request: "${query}". Provide a recipe name, description, timings, difficulty, a complete ingredient list, and step-by-step instructions. Also include sources for your recipe. Return the entire recipe in the specified JSON format.`,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: chefSchema,
-            },
-        });
-
-        const jsonText = response.text.trim();
-        const parsedData = JSON.parse(jsonText);
-
-        if (!parsedData.recipeName || !parsedData.ingredients || !parsedData.instructions) {
-            throw new Error("Received incomplete recipe data from the API.");
-        }
-
-        return parsedData as ChefData;
-    } catch (error) {
-        console.error("Error in performDeepChef:", error);
-        throw new Error("Failed to fetch or parse recipe data from the Gemini API.");
-    }
-};
-
-export const performDeepGame = async (query: string): Promise<GameData> => {
-    console.log(`Performing deep game for: ${query}`);
-    try {
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: `Act as an expert game designer. Your goal is to brainstorm a compelling game concept based on the user's idea: "${query}". Develop a game title, a core concept, key gameplay mechanics, interesting character concepts, and potential monetization strategies. Also include sources for inspiration. Return the entire game concept in the specified JSON format.`,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: gameSchema,
-            },
-        });
-
-        const jsonText = response.text.trim();
-        const parsedData = JSON.parse(jsonText);
-
-        if (!parsedData.title || !parsedData.coreMechanics || !parsedData.characterConcepts) {
-            throw new Error("Received incomplete game data from the API.");
-        }
-
-        return parsedData as GameData;
-    } catch (error) {
-        console.error("Error in performDeepGame:", error);
-        throw new Error("Failed to fetch or parse game data from the Gemini API.");
-    }
-};
-
-
-export const createChat = (query: string): Chat => {
-  return ai.chats.create({
-    model: 'gemini-2.5-flash',
-    config: {
-      systemInstruction: `You are a helpful research assistant. The user has just completed deep research on the topic: "${query}". Your role is to answer follow-up questions concisely and accurately based on general knowledge related to this topic.`,
-    },
-  });
-};
+}
