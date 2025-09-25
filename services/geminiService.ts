@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Chat } from "@google/genai";
-import type { ResearchData, CanvasData, AgentData, DebateData, StudyData, StudioData, TripData, HealthData, InterviewData, MarketData, ChefData, GameData, ChatMessage, GroundingChunk, CodeData, LegalData, FinanceData } from '../types';
+import type { ResearchData, CanvasData, AgentData, DebateData, StudyData, StudioData, TripData, HealthData, InterviewData, MarketData, ChefData, GameData, ChatMessage, GroundingChunk, CodeData, LegalData, FinanceData, SlidesData } from '../types';
 
 const researchSchema = {
   type: Type.OBJECT,
@@ -242,6 +242,20 @@ const studySchema = {
                 required: ["concept", "analogy"]
             }
         },
+        quiz: {
+            type: Type.ARRAY,
+            description: "A multiple-choice quiz with 5-10 questions to test knowledge of the topic.",
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    question: { type: Type.STRING, description: "The quiz question." },
+                    options: { type: Type.ARRAY, items: { type: Type.STRING }, description: "An array of 4 possible answers." },
+                    correctAnswer: { type: Type.STRING, description: "The correct answer from the options list." },
+                    explanation: { type: Type.STRING, description: "A brief explanation of why the correct answer is right." }
+                },
+                required: ["question", "options", "correctAnswer", "explanation"]
+            }
+        },
         sources: {
             type: Type.ARRAY,
             description: "A list of credible sources used to create the study guide.",
@@ -256,7 +270,7 @@ const studySchema = {
             }
         }
     },
-    required: ["keyConcepts", "studyPlan", "practiceProblems", "analogies", "sources"]
+    required: ["keyConcepts", "studyPlan", "practiceProblems", "analogies", "quiz", "sources"]
 };
 
 const studioSchema = {
@@ -796,13 +810,51 @@ const financeSchema = {
     required: ["topic", "disclaimer", "summary", "keyMetrics", "prosAndCons", "sources"]
 };
 
+const slidesSchema = {
+    type: Type.OBJECT,
+    properties: {
+        title: { type: Type.STRING, description: "The main title of the presentation." },
+        slides: {
+            type: Type.ARRAY,
+            description: "An array of slide objects, each with a title and content.",
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    title: { type: Type.STRING, description: "The title of the individual slide." },
+                    content: { type: Type.STRING, description: "The main content of the slide, written in markdown-like text." }
+                },
+                required: ["title", "content"]
+            }
+        },
+        htmlContent: {
+            type: Type.STRING,
+            description: "The complete, single HTML file content for the presentation. This HTML must use Tailwind CSS via CDN and include creative, custom styling. The design must be beautiful, modern, and unique. It should not be a simple, repeated template. Use varied layouts, colors, and typography."
+        },
+        sources: {
+            type: Type.ARRAY,
+            description: "A list of credible sources used for the presentation's content.",
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    title: { type: Type.STRING, description: "The title of the source." },
+                    url: { type: Type.STRING, description: "The URL of the source." },
+                    snippet: { type: Type.STRING, description: "A relevant snippet from the source." }
+                },
+                required: ["title", "url", "snippet"]
+            }
+        }
+    },
+    required: ["title", "slides", "htmlContent", "sources"]
+};
 
 export class GeminiService {
   private ai: GoogleGenAI;
 
-  // FIX: Constructor updated to use process.env.API_KEY directly, removing the apiKey parameter.
-  constructor() {
-    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  constructor(apiKey: string) {
+    if (!apiKey) {
+      throw new Error("API key is required to initialize GeminiService.");
+    }
+    this.ai = new GoogleGenAI({ apiKey });
   }
 
   async performDeepResearch(query: string): Promise<ResearchData> {
@@ -933,7 +985,8 @@ export class GeminiService {
               2. Study Plan: A structured plan to guide the learner.
               3. Practice Problems: Questions to test knowledge and application.
               4. Analogies: Simple ways to understand complex parts.
-              5. Sources: Credible references for further reading.
+              5. Quiz: A 5-10 question multiple-choice quiz with 4 options, the correct answer, and an explanation for the correct answer.
+              6. Sources: Credible references for further reading.
 
               Return the entire study guide in the specified JSON format.`,
               config: {
@@ -1213,6 +1266,41 @@ export class GeminiService {
       } catch (error) {
           console.error("Error in performDeepFinance:", error);
           throw new Error("Failed to fetch or parse finance data from the Gemini API.");
+      }
+  }
+
+  async performDeepSlides(query: string): Promise<SlidesData> {
+      console.log(`Performing deep slides for: ${query}`);
+      try {
+          const response = await this.ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: `Act as an expert presentation designer and web developer. Your goal is to create a beautiful, modern, and informative presentation on the topic: "${query}".
+              
+              You MUST provide:
+              1. A presentation title.
+              2. A structured list of slides with titles and content.
+              3. A single, complete HTML file content for the presentation. This HTML must use Tailwind CSS via the CDN (https://cdn.tailwindcss.com) for styling.
+              4. The design MUST be creative, unique, and aesthetically pleasing. DO NOT use the same simple template every time. Vary the layouts (e.g., title slide, content slide with image, two-column layout), color schemes, and typography to create a custom feel for the topic.
+              5. Cite your sources.
+              
+              Return the entire output in the specified JSON format.`,
+              config: {
+                  responseMimeType: "application/json",
+                  responseSchema: slidesSchema,
+              },
+          });
+
+          const jsonText = response.text.trim();
+          const parsedData = JSON.parse(jsonText);
+
+          if (!parsedData.title || !parsedData.slides || !parsedData.htmlContent) {
+              throw new Error("Received incomplete slides data from the API.");
+          }
+
+          return parsedData as SlidesData;
+      } catch (error) {
+          console.error("Error in performDeepSlides:", error);
+          throw new Error("Failed to fetch or parse slides data from the Gemini API.");
       }
   }
 

@@ -27,6 +27,7 @@ const modeDetails = {
     [ResearchMode.DEEP_CODE]: { title: 'Deep Code', placeholder: "Describe a coding problem or algorithm..." },
     [ResearchMode.DEEP_LEGAL]: { title: 'Deep Legal', placeholder: "Enter a legal topic to simplify..." },
     [ResearchMode.DEEP_FINANCE]: { title: 'Deep Finance', placeholder: "Enter a financial concept to analyze..." },
+    [ResearchMode.DEEP_SLIDES]: { title: 'Deep Slides', placeholder: "What is the topic of your presentation?" },
 };
 
 const SearchPage: React.FC<SearchPageProps> = ({ mode, onSearch, onBack, error }) => {

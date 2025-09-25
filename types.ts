@@ -1,6 +1,4 @@
-// FIX: Added import for React to use React.FC type.
 import React from 'react';
-// FIX: Removed circular dependency import from './types' that caused conflicts.
 import { DeepResearchIcon } from './components/icons/DeepResearchIcon';
 import { DeepCanvasIcon } from './components/icons/DeepCanvasIcon';
 import { DeepAgentIcon } from './components/icons/DeepAgentIcon';
@@ -17,6 +15,7 @@ import { DeepGameIcon } from './components/icons/DeepGameIcon';
 import { DeepCodeIcon } from './components/icons/DeepCodeIcon';
 import { DeepLegalIcon } from './components/icons/DeepLegalIcon';
 import { DeepFinanceIcon } from './components/icons/DeepFinanceIcon';
+import { DeepSlidesIcon } from './components/icons/DeepSlidesIcon';
 
 export enum AppState {
   MODE_SELECTION,
@@ -42,6 +41,7 @@ export enum ResearchMode {
   DEEP_CODE = 'DEEP_CODE',
   DEEP_LEGAL = 'DEEP_LEGAL',
   DEEP_FINANCE = 'DEEP_FINANCE',
+  DEEP_SLIDES = 'DEEP_SLIDES',
 }
 
 export interface Source {
@@ -138,11 +138,19 @@ export interface Analogy {
     analogy: string;
 }
 
+export interface QuizQuestion {
+    question: string;
+    options: string[];
+    correctAnswer: string;
+    explanation: string;
+}
+
 export interface StudyData {
     keyConcepts: KeyConcept[];
     studyPlan: StudyPlanItem[];
     practiceProblems: PracticeProblem[];
     analogies: Analogy[];
+    quiz: QuizQuestion[];
     sources: Source[];
 }
 
@@ -349,6 +357,17 @@ export interface FinanceData {
     sources: Source[];
 }
 
+export interface Slide {
+    title: string;
+    content: string;
+}
+
+export interface SlidesData {
+    title: string;
+    slides: Slide[];
+    htmlContent: string;
+    sources: Source[];
+}
 
 export interface GroundingChunk {
     web: {
@@ -363,7 +382,7 @@ export interface ChatMessage {
     sources?: GroundingChunk[];
 }
 
-export type AnyData = ResearchData | CanvasData | AgentData | DebateData | StudyData | StudioData | TripData | HealthData | InterviewData | MarketData | ChefData | GameData | CodeData | LegalData | FinanceData;
+export type AnyData = ResearchData | CanvasData | AgentData | DebateData | StudyData | StudioData | TripData | HealthData | InterviewData | MarketData | ChefData | GameData | CodeData | LegalData | FinanceData | SlidesData;
 
 export interface HistoryItem {
   id: string;
@@ -378,6 +397,7 @@ export const modeDetails: Record<ResearchMode, { Icon: React.FC; title: string; 
     [ResearchMode.DEEP_AGENT]: { Icon: DeepAgentIcon, title: 'Deep Agent', description: 'Autonomous AI agent that shows its research path.', tag: { text: 'PRO', color: 'bg-purple-100 text-purple-800' } },
     [ResearchMode.DEEP_AGENT_2]: { Icon: DeepAgent2Icon, title: 'Deep Agent 2.0', description: 'Browse the web and chat with a search-powered AI.', tag: { text: 'BETA', color: 'bg-teal-100 text-teal-800' } },
     [ResearchMode.DEEP_CANVAS]: { Icon: DeepCanvasIcon, title: 'Deep Canvas', description: 'Generate a fully functional web app from a prompt.', tag: { text: 'NEW', color: 'bg-blue-100 text-blue-800' } },
+    [ResearchMode.DEEP_SLIDES]: { Icon: DeepSlidesIcon, title: 'Deep Slides', description: 'Generate a beautiful, custom-designed presentation.', tag: { text: 'NEW', color: 'bg-orange-100 text-orange-800' } },
     [ResearchMode.DEEP_CODE]: { Icon: DeepCodeIcon, title: 'Deep Code', description: 'Solve coding problems with explanations and snippets.', tag: { text: 'NEW', color: 'bg-gray-800 text-gray-100' } },
     [ResearchMode.DEEP_LEGAL]: { Icon: DeepLegalIcon, title: 'Deep Legal', description: 'Simplify complex legal topics into plain English.', tag: { text: 'BETA', color: 'bg-amber-100 text-amber-800' } },
     [ResearchMode.DEEP_FINANCE]: { Icon: DeepFinanceIcon, title: 'Deep Finance', description: 'Analyze financial concepts with key metrics.', tag: { text: 'BETA', color: 'bg-emerald-100 text-emerald-800' } },

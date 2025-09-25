@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import type { ResearchData, FlashCard, MiniAppData, CanvasData, CodeFile, AgentData, AgentStep, DebateData, Viewpoint, StudyData, KeyConcept, StudyPlanItem, PracticeProblem, Analogy, StudioData, VideoIdea, ScriptSegment, TripData, ItineraryItem, BudgetItem, HealthData, WorkoutDay, MealDay, InterviewData, InterviewQuestion, MarketData, TargetAudience, Competitor, Swot, ChefData, GameData, Ingredient, GameMechanic, CharacterConcept, CodeData, LegalData, FinanceData, CodeSnippet, LegalTerm, FinanceMetric, AnyData } from '../types';
+import type { ResearchData, FlashCard, MiniAppData, CanvasData, CodeFile, AgentData, AgentStep, DebateData, Viewpoint, StudyData, KeyConcept, StudyPlanItem, PracticeProblem, Analogy, StudioData, VideoIdea, ScriptSegment, TripData, ItineraryItem, BudgetItem, HealthData, WorkoutDay, MealDay, InterviewData, InterviewQuestion, MarketData, TargetAudience, Competitor, Swot, ChefData, GameData, Ingredient, GameMechanic, CharacterConcept, CodeData, LegalData, FinanceData, CodeSnippet, LegalTerm, FinanceMetric, AnyData, SlidesData, Slide, QuizQuestion } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 // Type guards to differentiate between data types
@@ -17,13 +17,14 @@ function isGameData(data: any): data is GameData { return (data as GameData).cor
 function isCodeData(data: any): data is CodeData { return (data as CodeData).codeSnippets !== undefined; }
 function isLegalData(data: any): data is LegalData { return (data as LegalData).plainSummary !== undefined; }
 function isFinanceData(data: any): data is FinanceData { return (data as FinanceData).keyMetrics !== undefined; }
+function isSlidesData(data: any): data is SlidesData { return (data as SlidesData).htmlContent !== undefined; }
 
 
 type ResearchTab = 'Summary' | 'Sources' | 'Flash Cards' | 'Related Videos' | 'Interactive Mini App';
 type CanvasTab = 'Preview' | 'Sources' | 'Code';
 type AgentTab = 'Summary' | 'Agent Path' | 'Sources';
 type DebateTab = 'Argument Map' | 'Consensus' | 'Unresolved Questions' | 'Sources';
-type StudyTab = 'Key Concepts' | 'Study Plan' | 'Practice Problems' | 'Analogies' | 'Sources';
+type StudyTab = 'Key Concepts' | 'Study Plan' | 'Practice Problems' | 'Analogies' | 'Quiz' | 'Sources';
 type StudioTab = 'Video Ideas' | 'Script' | 'SEO & Hashtags' | 'Sources';
 type TripTab = 'Itinerary' | 'Packing List' | 'Budget' | 'Sources';
 type HealthTab = 'Disclaimer' | 'Workout Plan' | 'Meal Plan' | 'Healthy Habits' | 'Sources';
@@ -34,12 +35,13 @@ type GameTab = 'Concept' | 'Mechanics' | 'Characters' | 'Monetization' | 'Source
 type CodeTab = 'Explanation' | 'Code' | 'Edge Cases' | 'Sources';
 type LegalTab = 'Disclaimer' | 'Summary' | 'Key Terms' | 'Main Points' | 'Sources';
 type FinanceTab = 'Disclaimer' | 'Summary' | 'Key Metrics' | 'Pros & Cons' | 'Sources';
+type SlidesTab = 'Presentation' | 'Content' | 'Code' | 'Sources';
 
 const researchTabs: ResearchTab[] = ['Summary', 'Sources', 'Flash Cards', 'Related Videos', 'Interactive Mini App'];
 const canvasTabs: CanvasTab[] = ['Preview', 'Sources', 'Code'];
 const agentTabs: AgentTab[] = ['Summary', 'Agent Path', 'Sources'];
 const debateTabs: DebateTab[] = ['Argument Map', 'Consensus', 'Unresolved Questions', 'Sources'];
-const studyTabs: StudyTab[] = ['Key Concepts', 'Study Plan', 'Practice Problems', 'Analogies', 'Sources'];
+const studyTabs: StudyTab[] = ['Key Concepts', 'Study Plan', 'Practice Problems', 'Analogies', 'Quiz', 'Sources'];
 const studioTabs: StudioTab[] = ['Video Ideas', 'Script', 'SEO & Hashtags', 'Sources'];
 const tripTabs: TripTab[] = ['Itinerary', 'Packing List', 'Budget', 'Sources'];
 const healthTabs: HealthTab[] = ['Disclaimer', 'Workout Plan', 'Meal Plan', 'Healthy Habits', 'Sources'];
@@ -50,6 +52,7 @@ const gameTabs: GameTab[] = ['Concept', 'Mechanics', 'Characters', 'Monetization
 const codeTabs: CodeTab[] = ['Explanation', 'Code', 'Edge Cases', 'Sources'];
 const legalTabs: LegalTab[] = ['Disclaimer', 'Summary', 'Key Terms', 'Main Points', 'Sources'];
 const financeTabs: FinanceTab[] = ['Disclaimer', 'Summary', 'Key Metrics', 'Pros & Cons', 'Sources'];
+const slidesTabs: SlidesTab[] = ['Presentation', 'Content', 'Code', 'Sources'];
 
 interface LeftPaneProps {
   data: AnyData;
@@ -72,6 +75,7 @@ const LeftPane: React.FC<LeftPaneProps> = ({ data, query }) => {
     if (isCodeData(data)) return 'code';
     if (isLegalData(data)) return 'legal';
     if (isFinanceData(data)) return 'finance';
+    if (isSlidesData(data)) return 'slides';
     return 'research';
   }, [data]);
 
@@ -91,6 +95,7 @@ const LeftPane: React.FC<LeftPaneProps> = ({ data, query }) => {
         case 'code': return codeTabs;
         case 'legal': return legalTabs;
         case 'finance': return financeTabs;
+        case 'slides': return slidesTabs;
         default: return researchTabs;
     }
   }, [mode]);
@@ -128,7 +133,15 @@ const LeftPane: React.FC<LeftPaneProps> = ({ data, query }) => {
 };
 
 const TabContent: React.FC<{ activeTab: any; data: any }> = ({ activeTab, data }) => {
-    if (isCanvasData(data)) {
+    if (isSlidesData(data)) {
+        switch (activeTab as SlidesTab) {
+            case 'Presentation': return <PresentationPreviewContent htmlContent={data.htmlContent} />;
+            case 'Content': return <PresentationContent slides={data.slides} />;
+            case 'Code': return <PresentationCodeContent htmlContent={data.htmlContent} />;
+            case 'Sources': return <SourcesContent sources={data.sources} />;
+            default: return null;
+        }
+    } else if (isCanvasData(data)) {
         switch (activeTab as CanvasTab) {
             case 'Preview': return <PreviewContent codeFiles={data.code} />;
             case 'Sources': return <SourcesContent sources={data.sources} />;
@@ -156,6 +169,7 @@ const TabContent: React.FC<{ activeTab: any; data: any }> = ({ activeTab, data }
             case 'Study Plan': return <StudyPlanContent plan={data.studyPlan} />;
             case 'Practice Problems': return <PracticeProblemsContent problems={data.practiceProblems} />;
             case 'Analogies': return <AnalogiesContent analogies={data.analogies} />;
+            case 'Quiz': return <QuizContent quiz={data.quiz} />;
             case 'Sources': return <SourcesContent sources={data.sources} />;
             default: return null;
         }
@@ -256,6 +270,39 @@ const TabContent: React.FC<{ activeTab: any; data: any }> = ({ activeTab, data }
         }
     }
 };
+
+// --- Deep Slides Components ---
+const PresentationPreviewContent: React.FC<{ htmlContent: string }> = ({ htmlContent }) => (
+    <div className="w-full h-[60vh] border border-gray-200 rounded-lg overflow-hidden shadow-inner">
+        <iframe
+            srcDoc={htmlContent}
+            title="Presentation Preview"
+            sandbox="allow-scripts"
+            className="w-full h-full"
+            frameBorder="0"
+        />
+    </div>
+);
+
+const PresentationContent: React.FC<{ slides: Slide[] }> = ({ slides }) => (
+    <div className="space-y-6">
+        {slides.map((slide, index) => (
+            <div key={index} className="bg-gray-50 rounded-lg p-5 border border-gray-200">
+                <h3 className="text-lg font-bold text-gray-800">{index + 1}. {slide.title}</h3>
+                <p className="mt-2 text-gray-700 whitespace-pre-wrap">{slide.content}</p>
+            </div>
+        ))}
+    </div>
+);
+
+const PresentationCodeContent: React.FC<{ htmlContent: string }> = ({ htmlContent }) => (
+    <div className="flex flex-col h-[60vh]">
+        <div className="flex-grow bg-gray-800 text-white font-mono text-sm rounded-md p-4 overflow-auto">
+            <pre><code>{htmlContent}</code></pre>
+        </div>
+    </div>
+);
+
 
 // --- Deep Finance Components ---
 const KeyMetricsContent: React.FC<{ metrics: FinanceMetric[] }> = ({ metrics }) => (
@@ -864,6 +911,83 @@ const AnalogiesContent: React.FC<{ analogies: Analogy[] }> = ({ analogies }) => 
     </div>
 );
 
+const QuizContent: React.FC<{ quiz: QuizQuestion[] }> = ({ quiz }) => {
+    const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
+    const [submitted, setSubmitted] = useState(false);
+
+    const handleSelectAnswer = (questionIndex: number, answer: string) => {
+        if (submitted) return;
+        setSelectedAnswers(prev => ({ ...prev, [questionIndex]: answer }));
+    };
+
+    const handleSubmit = () => {
+        setSubmitted(true);
+    };
+
+    const getOptionClass = (question: QuizQuestion, option: string, index: number) => {
+        if (!submitted) {
+            return selectedAnswers[index] === option 
+                ? 'bg-blue-200 border-blue-400' 
+                : 'bg-gray-100 hover:bg-gray-200 border-gray-200';
+        }
+        if (option === question.correctAnswer) {
+            return 'bg-green-200 border-green-400';
+        }
+        if (selectedAnswers[index] === option && option !== question.correctAnswer) {
+            return 'bg-red-200 border-red-400';
+        }
+        return 'bg-gray-100 border-gray-200 opacity-70';
+    };
+
+    const score = Object.keys(selectedAnswers).reduce((acc, key) => {
+        const index = parseInt(key, 10);
+        if (selectedAnswers[index] === quiz[index].correctAnswer) {
+            return acc + 1;
+        }
+        return acc;
+    }, 0);
+
+    return (
+        <div className="space-y-8">
+            {quiz.map((q, index) => (
+                <div key={index} className="bg-white rounded-lg p-5 border border-gray-200 shadow-sm">
+                    <h3 className="font-semibold text-gray-800">{index + 1}. {q.question}</h3>
+                    <div className="mt-4 space-y-2">
+                        {q.options.map(option => (
+                            <button
+                                key={option}
+                                onClick={() => handleSelectAnswer(index, option)}
+                                className={`w-full text-left p-3 rounded-md border-2 transition-colors ${getOptionClass(q, option, index)}`}
+                                disabled={submitted}
+                            >
+                                {option}
+                            </button>
+                        ))}
+                    </div>
+                    {submitted && (
+                        <div className="mt-4 p-3 rounded-md bg-yellow-50 border border-yellow-200 text-sm text-gray-700">
+                            <strong>Explanation:</strong> {q.explanation}
+                        </div>
+                    )}
+                </div>
+            ))}
+             <div className="mt-6 flex flex-col items-center">
+                {submitted ? (
+                    <div className="text-center">
+                        <p className="text-xl font-bold">Your Score: {score} / {quiz.length}</p>
+                        <button onClick={() => { setSubmitted(false); setSelectedAnswers({}); }} className="mt-4 px-6 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+                            Try Again
+                        </button>
+                    </div>
+                ) : (
+                    <button onClick={handleSubmit} className="px-6 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+                        Check Answers
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+};
 
 // --- Deep Debate Components ---
 
